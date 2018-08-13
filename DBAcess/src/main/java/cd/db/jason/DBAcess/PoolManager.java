@@ -9,11 +9,8 @@ import java.net.URLDecoder;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -26,12 +23,10 @@ public class PoolManager {
         private final static   PoolManager dBService=new PoolManager();
     }
     public static PoolManager getInstance(){
-        
         return Single.dBService;
     }
     private  ConcurrentHashMap<String,HikariDataSource> map=new ConcurrentHashMap<String,HikariDataSource>();
-    private String applocaltion="";
-    private  ReentrantReadWriteLock conLock=new ReentrantReadWriteLock();
+    public String applocaltion="";
     // 调用SQL      
     PreparedStatement pst = null;
     private ConcurrentHashMap<String, Connection> mapCon=new ConcurrentHashMap<String, Connection>();
@@ -59,10 +54,10 @@ public class PoolManager {
     }
     
     /**
-     * 初始化配置连接
+      * 初始化配置连接
      * @param name
      */
- private HikariDataSource initConfig(String name)
+ private synchronized  HikariDataSource initConfig(String name)
  {
      System.out.println("读取DB配置路径："+applocaltion);
      StringBuffer buf=new StringBuffer();
@@ -93,10 +88,17 @@ public class PoolManager {
          }
           return initConfig(name);
      }
+     else
+     {
+         System.out.println("读取DB配置："+buf.toString());
+     }
+     //替换了也没有关系;连接池最后都会销毁
      HikariConfig config = new HikariConfig(buf.toString());
      HikariDataSource dataSource= new HikariDataSource(config);
-     return map.put(name, dataSource);
+     map.put(name, dataSource);
+     return dataSource;
  }
+
  
  /**
   * 获取线程ID
@@ -118,10 +120,8 @@ public Connection getConnection(String dbName)  {
         HikariDataSource   dataSource=map.getOrDefault(dbName, null);
         if(dataSource==null)
         {
-            conLock.readLock().lock();
+            //同步方法
             dataSource=initConfig(dbName);
-            conLock.readLock().unlock();
-            
         }
         if(dataSource!=null)
               con= dataSource.getConnection();

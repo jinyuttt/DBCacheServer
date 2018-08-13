@@ -37,7 +37,18 @@ private  HashMap<String,String> mapZN=new HashMap<String,String>(1000);
 private  HashMap<String,String> mapCN=new HashMap<String,String>(1000);
 private  HashMap<String,HashMap<String,String>> mapENZD=new  HashMap<String,HashMap<String,String>>(1000);
 private  HashMap<String,HashMap<String,String>> mapZNZD=new  HashMap<String,HashMap<String,String>>(1000);
+
+/**
+ * 用户信息
+ * userid-username
+ */
 private  HashMap<String,String> mapUser=new  HashMap<String,String>();
+
+/**
+ * 用户信息
+ * username-userid
+ */
+private  HashMap<String,String> mapUserInfo=new  HashMap<String,String>();
 
 /**
  * 用户表权限
@@ -64,8 +75,25 @@ public void setUserInfo(HashMap<String,String> user)
         return;
     }
     mapUser.putAll(user);
+    //
+    for( Entry<String, String> kv:mapUser.entrySet())
+    {
+        mapUserInfo.put(kv.getValue(), kv.getKey());
+    }
 }
 
+/**
+ * 
+* @Title: getUserid
+* @Description: 返回用户ID
+* @param @param username 用户名称
+* @param @return    参数
+* @return String    返回类型
+ */
+public String getUserid(String username)
+{
+   return mapUserInfo.getOrDefault(username, username);
+}
 /**
  * 
  * @Title: setZNCN   
@@ -160,13 +188,13 @@ public String do_ZN(String name)
 
 /**
  * 
- * @Title: do_CN   
+ * @Title: do_EN   
  * @Description: 转英文   
- * @param name
+ * @param name 中文名称
  * @return    
  * String
  */
-public String do_CN(String name)
+public String do_EN(String name)
 {
     return mapCN.getOrDefault(name, name);
 }
@@ -246,7 +274,7 @@ public boolean do_Data_Permissions(String userName,List<DataPermissions> lst)
     }
     else
     {
-       String userid= mapUser.getOrDefault(userName, null);
+       String userid=mapUserInfo.getOrDefault(userName, userName);
        if(userid==null)
        {
            return false;

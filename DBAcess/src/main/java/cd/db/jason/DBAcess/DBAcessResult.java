@@ -61,9 +61,6 @@ public class DBAcessResult {
             return 0;
         }
         
-    
-       
-        
         /**
          * 
          * @Title: executeQueryRS   

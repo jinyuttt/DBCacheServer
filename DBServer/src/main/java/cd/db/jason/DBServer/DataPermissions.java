@@ -9,6 +9,7 @@
  */
 package cd.db.jason.DBServer;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**    
@@ -26,5 +27,5 @@ import java.util.List;
  */
 public class DataPermissions {
    public TablePermissions permissions;
-   public List<String> tables;
+   public List<String> tables=new ArrayList<String>();
 }

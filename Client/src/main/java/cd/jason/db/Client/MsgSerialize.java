@@ -7,7 +7,7 @@
  * 版权所有    
  *    
  */
-package cd.db.jason.DBServer;
+package cd.jason.db.Client;
 
 import java.io.IOException;
 
@@ -22,7 +22,7 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
  *     
  * 项目名称：DBServer    
  * 类名称：MsgSerialize    
- * 类描述：    
+ * 类描述：    序列化
  * 创建人：jinyu    
  * 创建时间：2018年8月5日 下午4:20:01    
  * 修改人：jinyu    

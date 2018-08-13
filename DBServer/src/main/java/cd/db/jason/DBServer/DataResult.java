@@ -26,5 +26,6 @@ import cd.db.jason.model.DynamicModel;
  */
 public class DataResult {
 public String strSql="";
+public String sqlID="";
 public DynamicModel model;
 }

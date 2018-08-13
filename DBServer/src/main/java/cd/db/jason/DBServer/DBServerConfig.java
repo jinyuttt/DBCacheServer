@@ -33,7 +33,8 @@ public String logConfig="config/log4j2.xml";
 public String sqlConfig="SQLConfig";
 public String dbType="ora";
 private String confFile="config/config.properties";
-
+public  long cacheSize=10000;
+public int cacheTime=60;
 public void loadConfig()
 {
    File conf=new File(confFile);
@@ -51,11 +52,15 @@ public void loadConfig()
      String srvPort=properties.getProperty("port", "5000");
      String logConf=properties.getProperty("logconf", "config/log4j2.xml");
      String srvSqls=properties.getProperty("sqlconfig", "SQLConfig");
-     String srvDBType=properties.getProperty("dbType", "ora");
+     String srvDBType=properties.getProperty("dbType", "psql");
+     String cacheMaxSize=properties.getProperty("cacheSize", "10000");
+     String cacheMaxTime=properties.getProperty("cacheTime", "60");
      this.sqlConfig=srvSqls;
      this.logConfig=logConf;
      this.dbType=srvDBType;
      this.port=Integer.valueOf(srvPort);
+     this.cacheTime=Integer.valueOf(cacheMaxTime);
+     this.cacheSize=Long.valueOf(cacheMaxSize);
     }
     catch(Exception ex)
     {

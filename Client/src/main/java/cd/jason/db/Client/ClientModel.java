@@ -65,5 +65,33 @@ public long timeout=0;
  * 如果没有数据则说明SQL已经拼接好
  * 如果有数据说明SQL是参数化方式，会按照字段替换参数
  */
-public HashMap<String,String> mapData=new HashMap<String,String>();
+private HashMap<String,ParamModel> mapData=new HashMap<String,ParamModel>();
+
+/**
+ * 
+* @Title: addParam
+* @Description: 添加参数化数据
+* @param @param name
+* @param @param obj    参数
+* @return void    返回类型
+ */
+public  void addParam(String name,Object obj)
+{
+    ParamModel mode=new ParamModel();
+    mode.clsName=obj.getClass().getName().replace("java.lang.", "");
+    mode.value=String.valueOf(obj);
+    mapData.put(name, mode);
+}
+
+/**
+ * 
+* @Title: getData
+* @Description: 返回信息
+* @param @return    参数
+* @return HashMap<String,ParamModel>    返回类型
+ */
+public HashMap<String,ParamModel> getData()
+{
+    return mapData;
+}
 }

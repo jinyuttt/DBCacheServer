@@ -1,5 +1,4 @@
 <root>
-
 <suerinfo id="01">
 <sql>select * from userinfo</sql>
 <userid>userid</userid>
@@ -17,14 +16,15 @@
 <name>zname</name>
 </ZD>
 <Permissions>
-<sql></sql>
-<table></table>
-<insert></insert>
-<delete></delete>
-<update></update>
-<select></select>
-<create></create>
-<drop></drop>
-<truncate></truncate>
+<sql>select * from data_permissions</sql>
+<table>tablename</table>
+<userid>userid</userid>
+<insert>insert</insert>
+<delete>delete</delete>
+<update>update</update>
+<select>select</select>
+<create>create</create>
+<drop>drop</drop>
+<truncate>drop</truncate>
 </Permissions>
 </root>

@@ -36,7 +36,7 @@ import java.util.Map;
  */
 public class DBAcess {
     
-   private String dbName="postgresql";
+   private String dbName="psql";
    
    /**
     * 设置数据库类型
@@ -73,10 +73,10 @@ public class DBAcess {
     public int executeDMLSql(String sql) throws SQLException
     {
         // 获得连接      
-             Connection conn = getConnection();      
-            // 调用SQL       
-             Statement smt = conn.createStatement();
-               return    smt.executeUpdate(sql);
+        Connection conn = getConnection();      
+        // 调用SQL       
+        Statement smt = conn.createStatement();
+        return  smt.executeUpdate(sql);
     }
     
 
@@ -96,7 +96,7 @@ public class DBAcess {
              Connection conn = getConnection();      
             // 调用SQL       
              Statement smt = conn.createStatement();
-               return    smt.executeQuery(sql);
+             return    smt.executeQuery(sql);
     }
     
     /**
@@ -203,7 +203,7 @@ public class DBAcess {
             // 参数赋值      
             if (params != null) {      
                 for (int i = 0; i < params.length; i++) {      
-                    pst.setObject(i + 1, params[i]);      
+                    pst.setObject(i + 1, params[i]);   
                 }      
             }      
                   

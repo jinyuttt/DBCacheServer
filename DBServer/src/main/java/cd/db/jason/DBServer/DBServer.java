@@ -30,6 +30,9 @@ import cd.db.jason.cglib.JavaStringCompiler;
 import cd.db.jason.model.DynamicModel;
 import cd.jason.db.Client.ClientModel;
 import cd.jason.db.Client.DataFormat;
+import cd.jason.db.Client.MsgSerialize;
+import cd.jason.db.Client.ParamModel;
+import cd.jason.db.Client.RequestResult;
 import cd.jason.db.Client.ZN_CN_Trans;
 import cd.strommq.channel.NettyRspData;
 import cd.strommq.channel.NettyServer;
@@ -52,7 +55,7 @@ import cd.strommq.nettyFactory.FactorySocket;
 public class DBServer {
    public String javaDir="javasrc";
    public String clsDir="clsSrc";
-   public String dbType="ora";
+   public String dbType="psql";
    ExecutorService fixedThreadPool = null;
    ExecutorService cachePool = null;
    NettyServer netServer=null;
@@ -81,20 +84,28 @@ public class DBServer {
        recvice();//开启数据接收
        LogFactory.getInstance().addInfo("开启服务");
        cachePool.execute(new Runnable() {
-
         @Override
         public void run() {
             init();
-            
         }
-           
        });
+       //
+       DBAcessResult db=new DBAcessResult();
+       db.setDB(dbType);
+       String sql="create table test(id int,name varchar(10))";
+       db.executeDMLSql(sql);
+       db.closeDB();
+       try {
+        Thread.sleep(5000);
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
    }
    
    /**
-    * 初始化
+      * 初始化
     * @Title: init   
-    * @Description: TODO(这里用一句话描述这个方法的作用)       
+    * @Description: 初始化信息    
     * void
     */
    public void init()
@@ -105,14 +116,14 @@ public class DBServer {
        String file=XMLRead.dir+"/dbbase.xml";
        XMLRead rd=new XMLRead(file);
        String sql=rd.read("suerinfo", "sql","");
-       String userid=rd.read("suerinfo", "sql","");//userid字段名称
-       String username=rd.read("suerinfo", "sql","");//username字段名称
+       String userid=rd.read("suerinfo", "userid","");//userid字段名称
+       String username=rd.read("suerinfo", "username","");//username字段名称
        readUser(sql,userid,username);
        //中英文转换
        sql=rd.read("ZNCN", "sql","");
        String zh=rd.read("ZNCN", "ZN", "");
        String en=rd.read("ZNCN", "CN", "");
-       readZNCN(sql,zh,en);
+       readZNEN(sql,zh,en);
        //字典值转换
        sql=rd.read("ZD", "sql","");
        String ename=rd.read("ZD", "key", "");
@@ -171,7 +182,7 @@ public class DBServer {
     * @param cn    
     * void
     */
-   private  void readZNCN(String sql,String zn,String cn)
+   private  void readZNEN(String sql,String zn,String cn)
    {
        DBAcessResult db=new DBAcessResult();
        db.setDB(dbType);
@@ -243,7 +254,7 @@ public class DBServer {
        {
        String id="";
        String sql=rd.read("Permissions","sql", id);
-       String userid=rd.read("Permissions","sql", id);
+       String userid=rd.read("Permissions","userid", id);
        String table=rd.read("Permissions","table", id);
        String pinsert=rd.read("Permissions","insert", id);
        String pdelete=rd.read("Permissions","delete", id);
@@ -410,8 +421,14 @@ public RequestResult startThread(ClientModel model)
 
     String strSQL="";
     DataResult configsql=null;
+    HashMap<String,Object> map=null;//参数化结果
+    String cacheid="";
     if(model.strSQL.isEmpty())
     {
+        if(model.configID!=null)
+        {
+            model.configID=model.configID.replace("/", "_");
+        }
         configsql = SQLConfig.getInstance().getResult(model.configID);
         strSQL=configsql.strSql;
     }
@@ -419,21 +436,14 @@ public RequestResult startThread(ClientModel model)
     {
         strSQL=model.strSQL;
     }
-         RequestResult reqResult= (RequestResult) DBCache.getInstance().getDataCache(strSQL);
-        if(reqResult!=null)
-        {
-            return reqResult;
-        }
-        else
-        {
-            reqResult=new RequestResult();
-        }
+    RequestResult reqResult=new RequestResult();
     DBAcessResult db=new DBAcessResult();
     db.setDB(dbType);
     //分析SQL
     FilterResult result = FilterTable.getInstance().getTableType(strSQL);
     //处理Sql 
    List<DataPermissions> lstPermission = do_Data_Permissions(result);
+   //userName转userid
    boolean r= BusDictionary.getInstance().do_Data_Permissions(model.userName, lstPermission);
    if(!r)
    {
@@ -442,8 +452,26 @@ public RequestResult startThread(ClientModel model)
    }
    else
    {
-     if(model.mapData.isEmpty())
-      {
+       HashMap<String,ParamModel> mapData=model.getData();
+       //处理一次参数
+       cacheid=strSQL;
+       if(!mapData.isEmpty())
+       {
+           map=convertData(mapData);
+           String key=MsgSerialize.JSONSerialize(map);
+           cacheid=cacheid+key;
+       }
+       reqResult=(RequestResult) DBCache.getInstance().getDataCache(cacheid);
+       if(reqResult!=null)
+       {
+          return reqResult;
+       }
+       else
+        {
+              reqResult=new RequestResult();
+        }
+      if(map==null)
+       {
         if(result.opt==TableType.select)
         {
             ResultSet rs = db.executeQuerySql(strSQL);
@@ -454,10 +482,11 @@ public RequestResult startThread(ClientModel model)
             int num=db.executeDMLSql(strSQL);
             reqResult.Result=num;
         }
-      }
+       }
     else
     {
-        Object[] params =do_Params(result.param,model.mapData);
+       
+        Object[] params =do_Params(result.param,map);
         if(result.opt==TableType.select)
         {
             ResultSet rs =  db.executeQueryRS(strSQL, params);
@@ -471,13 +500,34 @@ public RequestResult startThread(ClientModel model)
     }
    }
    db.closeDB();
-   if(!strSQL.contains("?"))
-   {
-      DBCache.getInstance().addCache(strSQL, reqResult);
-   }
-return reqResult;
+       //将参数转出json字符串组成key;
+   if(!cacheid.isEmpty())
+   DBCache.getInstance().addCache(cacheid, reqResult);
+  return reqResult;
 }
 
+/**
+ * 
+* @Title: convertData
+* @Description: 参数转换为数据
+* @param @param mapData
+* @param @return    参数
+* @return HashMap<String,Object>    返回类型
+ */
+private  HashMap<String,Object> convertData(HashMap<String,ParamModel> mapData)
+{
+    HashMap<String,Object> map=new HashMap<String,Object>();
+    Iterator<Entry<String, ParamModel>> iter = mapData.entrySet().iterator();
+    while(iter.hasNext())
+    {
+        Entry<String, ParamModel> item = iter.next();
+        ParamModel p=item.getValue();
+        Object value =DBTool.getVlaue(p.clsName, p.value);
+        String key=BusDictionary.getInstance().do_EN(item.getKey());
+        map.put(key, value);
+    }
+    return map;
+}
 /**
  * 
  * @Title: do_Data_Permissions   
@@ -543,7 +593,7 @@ private List<DataPermissions> do_Data_Permissions(FilterResult result )
  * @return    
  * Object[]
  */
-private Object[]  do_Params(Map<String,Object> mapParam,Map<String,String> mapData)
+private Object[]  do_Params(Map<String,Object> mapParam,Map<String,Object> mapData)
 {
    
     List<Object> lst=new ArrayList<Object>();
@@ -558,7 +608,7 @@ private Object[]  do_Params(Map<String,Object> mapParam,Map<String,String> mapDa
        }
        else if(item.getValue().toString().contains("?"))
        {
-           String value=mapData.getOrDefault(item.getKey(), "");
+           Object value=mapData.getOrDefault(item.getKey(), "");
            lst.add(value);
        }
     }
@@ -611,7 +661,7 @@ private List<HashMap<String,String>>  executeSelectSQL(ZN_CN_Trans trans,ResultS
           switch(trans)
           {
            case title:
-               columnName=BusDictionary.getInstance().do_CN(columnName);
+               columnName=BusDictionary.getInstance().do_ZN(columnName);
                map.put(columnName, strValue);
                break;
            case value:
@@ -626,7 +676,7 @@ private List<HashMap<String,String>>  executeSelectSQL(ZN_CN_Trans trans,ResultS
                {
                    strValue=BusDictionary.getInstance().do_ZN_Value(columnName, String.valueOf(value));
                }
-               columnName=BusDictionary.getInstance().do_CN(columnName);
+               columnName=BusDictionary.getInstance().do_ZN(columnName);
                map.put(columnName, strValue);
                break;
            case no:
@@ -663,19 +713,19 @@ private String createClass(String id,ResultSet rs)
     StringBuffer buf=new StringBuffer();
     StringBuffer bufData=new StringBuffer();
     buf.append("package cd.db.jason.model;\r\n" + 
-            "import java.util.*;");
+            "import java.util.*;\r\nimport java.sql.ResultSet;\r\n");
     buf.append(" public class ");
     buf.append(id);//类名称
     buf.append("_cls ");
-    buf.append("  extends DynamicModel{");
+    buf.append("  extends DynamicModel {\r\n");
     ResultSetMetaData meta = rs.getMetaData();
    int colSize= meta.getColumnCount();
    String columnName="";
    String columnType="";
    for(int i=0;i<colSize;i++)
    {
-       columnName=meta.getColumnName(i);
-       columnType=meta.getColumnClassName(i);
+       columnName=meta.getColumnName(i+1);
+       columnType=meta.getColumnClassName(i+1);
        columnType= DBTool.convertType(columnType);
        buf.append("  ");
        buf.append(" public ");
@@ -687,27 +737,45 @@ private String createClass(String id,ResultSet rs)
        bufData.append("this.");
        bufData.append(columnName);
        bufData.append("=");
-       if(columnType.equals("String"))
-       {
-           bufData.append("rs.getString(columnName)");
-       }
-       else if(columnType.equals("byte[]"))
-       {
-           bufData.append("rs.getBytes(columnName)");
-       }
-       else
-       {
-           bufData.append("rs.getObject(columnName)");
-       }
+       //取方法
+       bufData.append("rs.");
+       bufData.append(DBTool.convertJDBC(columnType));
+       bufData.append("(\"");
+       //另外一种方法利用强制转换
+//       if(columnType.equals("String"))
+//       {
+//           bufData.append("rs.getString(\"");
+//         
+//       }
+//       else if(columnType.equals("byte[]"))
+//       {
+//           bufData.append("rs.getBytes(\"");
+//       }
+//       else
+//       {
+  //     bufData.append("(");
+ //      bufData.append(columnType);
+    //   bufData.append(")");
+//           bufData.append("rs.getObject(\"");
+       
+//       }
+       //
+       bufData.append(columnName);
+       bufData.append("\")");
        bufData.append(";\r\n");
    }
- //处理方法
+   //处理方法
    buf.append("@Override\r\n" + 
-           "    public void setValues(ResultSet rs) {");
+           "    public void setValues(ResultSet rs) {\r\n");
+   buf.append("try{");
    buf.append(bufData);
-   buf.append("\r\n }");
+   buf.append("} catch(Exception ex)\r\n" + 
+           "    {\r\n" + 
+           "        ex.printStackTrace();\r\n" + 
+           "    }");
+   buf.append("\r\n}\r\n");
    buf.append("}");
-   buf.toString();
+   return buf.toString();
     }
     catch(Exception ex)
     {
@@ -757,6 +825,7 @@ private DynamicModel createModel(String filePath,String name,String src)
 @SuppressWarnings("deprecation")
 private List<DynamicModel> queryModel(DynamicModel template,String clsName,ResultSet rs)
 {
+     clsName=clsName.replace("-", "_");
     List<DynamicModel> lst=new ArrayList<DynamicModel>(1000);
     String cls= createClass(clsName,rs);
     DynamicModel srvModel=null;
@@ -764,6 +833,7 @@ private List<DynamicModel> queryModel(DynamicModel template,String clsName,Resul
     if(template==null)
     {
         srvModel=createModel(javaDir,clsName+"_cls",cls);
+        System.out.println("创建类："+clsName+"_cls");
         clazz=srvModel.getClass();
         template=srvModel;
     }

@@ -61,7 +61,7 @@ public class SQLConfig {
           String[] sqlConfs=dir.list();
           for(String srvSql:sqlConfs)
           {
-              XMLRead read=new XMLRead(srvSql);
+              XMLRead read=new XMLRead(XMLRead.dir+"/"+srvSql);
               HashMap<String, String> map = read.readALL();
               for(Entry<String, String> item:map.entrySet())
               {

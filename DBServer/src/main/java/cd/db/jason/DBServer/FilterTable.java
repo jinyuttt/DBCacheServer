@@ -19,6 +19,7 @@ import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.CaseExpression;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.JdbcParameter;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.expression.operators.relational.ItemsList;
@@ -159,6 +160,11 @@ public class FilterTable {
                     //获得操作符
                     //allColumnNames.append(((BinaryExpression) rightExpression).getStringExpression());
                 }
+            }
+            else if(rightExpression instanceof JdbcParameter)
+            {
+                JdbcParameter rightE=(JdbcParameter) rightExpression;
+                map.put(columnName,  rightE.toString());
             }
         }
         else if(expression instanceof CaseExpression)
@@ -305,8 +311,9 @@ if (stmt instanceof Select) {
     list.add(selectTable);
     PlainSelect plainSelect =(PlainSelect) statement.getSelectBody();
     getColumnName(list,plainSelect.getWhere(),param,allColumnNames);
+    result.opt=TableType.select;
 }
-if (stmt instanceof Insert) {
+else if (stmt instanceof Insert) {
     Insert statement = (Insert) stmt;
     FilterModel insertTable=new FilterModel();
     FilterModel selectTable=new FilterModel();
@@ -333,8 +340,9 @@ if (stmt instanceof Insert) {
    list.add(selectTable);
    PlainSelect plainSelect =(PlainSelect) selectStmt.getSelectBody();
    getColumnName(list,plainSelect.getWhere(),param,allColumnNames);
+   result.opt=TableType.insert;
 }
-if (stmt instanceof Update) {
+else if (stmt instanceof Update) {
     Update statement = (Update) stmt;
     FilterModel selectTable=new FilterModel();
     selectTable.filter=TableType.select;
@@ -358,8 +366,9 @@ if (stmt instanceof Update) {
    list.add(selectTable);
    PlainSelect plainSelect =(PlainSelect) selectStmt.getSelectBody();
    getColumnName(list,plainSelect.getWhere(),param,allColumnNames);
+   result.opt=TableType.update;
 }
-if (stmt instanceof Delete) {
+else if (stmt instanceof Delete) {
     Delete statement = (Delete) stmt;
     FilterModel deletetTable=new FilterModel();
     deletetTable.filter=TableType.delete;
@@ -369,8 +378,9 @@ if (stmt instanceof Delete) {
     deletetTable.tables.addAll(tableList);
     Expression where = statement.getWhere();
     getColumnName(list,where,param,allColumnNames);
+    result.opt=TableType.delete;
 }
-if (stmt instanceof CreateTable) {
+else if (stmt instanceof CreateTable) {
     CreateTable statement = (CreateTable) stmt;
     FilterModel createTable=new FilterModel();
     createTable.filter=TableType.create;
@@ -378,8 +388,9 @@ if (stmt instanceof CreateTable) {
     result.allTable.addAll(tableList);
     createTable.tables.addAll(tableList);
     list.add(createTable);
+    result.opt=TableType.create;
 }
-if (stmt instanceof Drop) {
+else if (stmt instanceof Drop) {
     Drop statement = (Drop) stmt;
     FilterModel dropTable=new FilterModel();
     dropTable.filter=TableType.drop;
@@ -387,8 +398,9 @@ if (stmt instanceof Drop) {
     result.allTable.addAll(tableList);
     dropTable.tables.addAll(tableList);
     list.add(dropTable);
+    result.opt=TableType.drop;
 }
-if (stmt instanceof Truncate) {
+else if (stmt instanceof Truncate) {
     Truncate statement = (Truncate) stmt;
     FilterModel truncTable=new FilterModel();
     truncTable.filter=TableType.truncate;
@@ -396,6 +408,7 @@ if (stmt instanceof Truncate) {
     result.allTable.addAll(tableList);
     truncTable.tables.addAll(tableList);
     list.add(truncTable);
+    result.opt=TableType.truncate;
 }
 result.lst.addAll(list);
 result.param.putAll(param);

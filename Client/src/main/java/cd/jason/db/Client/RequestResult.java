@@ -7,7 +7,7 @@
  * 版权所有    
  *    
  */
-package cd.db.jason.DBServer;
+package cd.jason.db.Client;
 
 import java.util.HashMap;
 
@@ -15,7 +15,7 @@ import java.util.HashMap;
  *     
  * 项目名称：DBServer    
  * 类名称：RequestResult    
- * 类描述：    
+ * 类描述：    返回参数信息
  * 创建人：jinyu    
  * 创建时间：2018年8月7日 下午5:16:19    
  * 修改人：jinyu    

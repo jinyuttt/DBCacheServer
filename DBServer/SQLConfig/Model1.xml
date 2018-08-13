@@ -1,7 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>  
 <Model>  
 <学生分数>
+<学生分数查询类1>
+<学生分数统计>
+<学生分数查询 id="01">select * from score</学生分数查询>
+<学生分数查询 >select * from score where id='?'</学生分数查询>
+</学生分数统计>
+</学生分数查询类1>
+<学生分数查询类2>
+<学生分数统计>
 <学生分数查询 id="01">select * from score</学生分数查询>
 <学生分数查询 id="02">select * from score where id='?'</学生分数查询>
+</学生分数统计>
+</学生分数查询类2>
+<学生分数查询类3>
+<学生分数统计>
+<学生分数查询 id="01">select * from score</学生分数查询>
+<学生分数查询 id="02">select * from score where id='?'</学生分数查询>
+</学生分数统计>
+</学生分数查询类3>
 </学生分数>
 </Model>  

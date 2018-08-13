@@ -19,7 +19,6 @@ class MemoryClassLoader extends URLClassLoader {
 		super(new URL[0], MemoryClassLoader.class.getClassLoader());
 		this.classBytes.putAll(classBytes);
 	}
-
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
 		byte[] buf = classBytes.get(name);

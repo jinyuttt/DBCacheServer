@@ -63,6 +63,7 @@ public class LogFactory {
 	     File conFile = new File(conf);
 	     if(conFile.exists())
 	     {
+	        System.out.println("日志配置："+conf);
 	       logContext.setConfigLocation(conFile.toURI());
 	       logContext.reconfigure();
 	     }
@@ -81,6 +82,7 @@ public class LogFactory {
 		    		 conFile = new File(confPath+"/log4j2.xml");
 		    		 if(conFile.exists())
 		    		 {
+		    		        System.out.println("日志配置："+conFile.getPath());
 		    			   logContext.setConfigLocation(conFile.toURI());
 				           logContext.reconfigure();
 		    		 }
