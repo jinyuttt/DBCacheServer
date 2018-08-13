@@ -85,8 +85,11 @@ public class DBCache {
 
                 /** redis数据库进行查询 **/
                 private Object getAppkeyInfo(String appKey)  {
-                    //读取其它缓存
-                   return null;
+                   if(RedisClient.isUse)
+                   {
+                      return RedisClient.getData(appKey);
+                   }
+                    return null;
                 }
             });
     }

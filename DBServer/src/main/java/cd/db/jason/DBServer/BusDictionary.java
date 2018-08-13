@@ -37,7 +37,7 @@ private  HashMap<String,String> mapZN=new HashMap<String,String>(1000);
 private  HashMap<String,String> mapCN=new HashMap<String,String>(1000);
 private  HashMap<String,HashMap<String,String>> mapENZD=new  HashMap<String,HashMap<String,String>>(1000);
 private  HashMap<String,HashMap<String,String>> mapZNZD=new  HashMap<String,HashMap<String,String>>(1000);
-
+public  String defaultDB="psql";
 /**
  * 用户信息
  * userid-username
@@ -56,6 +56,12 @@ private  HashMap<String,String> mapUserInfo=new  HashMap<String,String>();
  * value-权限名称-所有表
  */
 private  HashMap<String,HashMap<String,List<String>>> mapPermissions=new  HashMap<String,HashMap<String,List<String>>>();
+
+/**
+ * 配置的模块数据库
+ */
+private HashMap<String,String> mapDB=new HashMap<String,String>();
+
 public static BusDictionary getInstance()
 {
    return Sington.instance;
@@ -172,6 +178,18 @@ public void putPermissions(String userid,String permissionsName,String table)
        tables.add(table);
    }
     
+}
+
+/**
+ * 
+* @Title: setDBType
+* @Description: 设置数据库配置信息
+* @param @param map    参数
+* @return void    返回类型
+ */
+public void setDBType(HashMap<String,String> map)
+{
+    mapDB.putAll(map);
 }
 /**
  * 
@@ -316,4 +334,8 @@ public boolean do_Data_Permissions(String userName,List<DataPermissions> lst)
     return true;
 }
 
+public String getModulDB(String name)
+{
+    return mapDB.getOrDefault(name, defaultDB);
+}
 }

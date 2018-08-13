@@ -32,6 +32,10 @@ public class DataRemovalListener  implements RemovalListener<String, Object>{
     @Override
     public void onRemoval(RemovalNotification<String, Object> notification) {
         LogFactory.getInstance().addDebug("移除缓存key:"+notification.getKey());
+        if(RedisClient.isUse)
+        {
+            RedisClient.addData(notification.getKey(), notification.getValue());
+        }
     }
 
 }

@@ -12,6 +12,9 @@ package cd.db.jason.DBServer;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 /**    
@@ -31,10 +34,14 @@ public class DBServerConfig {
 public int port=6000;
 public String logConfig="config/log4j2.xml";
 public String sqlConfig="SQLConfig";
+public String dbTypeConfig="config/dbType.properties";
 public String dbType="ora";
 private String confFile="config/config.properties";
 public  long cacheSize=10000;
 public int cacheTime=60;
+public HashMap<String,String> db=new HashMap<String,String>();
+public boolean isRedis=false;
+public String redisSrv="";
 public void loadConfig()
 {
    File conf=new File(confFile);
@@ -55,12 +62,38 @@ public void loadConfig()
      String srvDBType=properties.getProperty("dbType", "psql");
      String cacheMaxSize=properties.getProperty("cacheSize", "10000");
      String cacheMaxTime=properties.getProperty("cacheTime", "60");
+     String db=properties.getProperty("dbConfig", "config/dbType.properties");
+     String redisUse=properties.getProperty("redisUse", "false");
+     String redisAddr=properties.getProperty("redisSrv", "");
      this.sqlConfig=srvSqls;
      this.logConfig=logConf;
      this.dbType=srvDBType;
      this.port=Integer.valueOf(srvPort);
      this.cacheTime=Integer.valueOf(cacheMaxTime);
      this.cacheSize=Long.valueOf(cacheMaxSize);
+     this.dbTypeConfig=db;
+     this.redisSrv=redisAddr;
+     this.isRedis=Boolean.valueOf(redisUse);
+    }
+    catch(Exception ex)
+    {
+        ex.printStackTrace();
+    }
+    loaddbconfig();
+}
+private void loaddbconfig()
+{
+    Properties properties = new Properties();
+    try
+    {
+    BufferedReader bufferedReader = new BufferedReader(new FileReader(dbTypeConfig));
+    properties.load(bufferedReader);
+   Iterator<Entry<Object, Object>> iter = properties.entrySet().iterator();
+    while(iter.hasNext())
+    {
+        Entry<Object, Object> item = iter.next();
+        db.put(item.getKey().toString(), item.getValue().toString());
+    }
     }
     catch(Exception ex)
     {

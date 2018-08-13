@@ -55,13 +55,20 @@ import cd.strommq.nettyFactory.FactorySocket;
 public class DBServer {
    public String javaDir="javasrc";
    public String clsDir="clsSrc";
-   public String dbType="psql";
    ExecutorService fixedThreadPool = null;
    ExecutorService cachePool = null;
    NettyServer netServer=null;
    public long timeOut=10*1000;//10s
    private volatile boolean isStop=false;
   private Class<ClientModel> clazz=ClientModel.class;
+  
+  /**
+   * 
+  * @Title: start
+  * @Description: 启动服务
+  * @param @param port    参数
+  * @return void    返回类型
+   */
    public void  start(final int port)
    {
        int num=Runtime.getRuntime().availableProcessors()*2;
@@ -89,9 +96,9 @@ public class DBServer {
             init();
         }
        });
-       //
+       //创建测试
        DBAcessResult db=new DBAcessResult();
-       db.setDB(dbType);
+       db.setDB(BusDictionary.getInstance().defaultDB);
        String sql="create table test(id int,name varchar(10))";
        db.executeDMLSql(sql);
        db.closeDB();
@@ -152,7 +159,7 @@ public class DBServer {
    private void readUser(String sql,String userid,String username)
    {
        DBAcessResult db=new DBAcessResult();
-       db.setDB(dbType);
+       db.setDB(BusDictionary.getInstance().defaultDB);
        HashMap<String, String> user=new  HashMap<String, String>();
        try
        {
@@ -169,7 +176,7 @@ public class DBServer {
            ex.printStackTrace();
        }
        db.closeDB();
-      BusDictionary.getInstance().setUserInfo(user);
+       BusDictionary.getInstance().setUserInfo(user);
    }
    
    
@@ -185,7 +192,7 @@ public class DBServer {
    private  void readZNEN(String sql,String zn,String cn)
    {
        DBAcessResult db=new DBAcessResult();
-       db.setDB(dbType);
+       db.setDB(BusDictionary.getInstance().defaultDB);
        HashMap<String, String> map=new  HashMap<String, String>();
        try
        {
@@ -218,7 +225,7 @@ public class DBServer {
    private  void readZDValue(String sql,String enname,String zid,String zname)
    {
        DBAcessResult db=new DBAcessResult();
-       db.setDB(dbType);
+       db.setDB(BusDictionary.getInstance().defaultDB);
        try
        {
        ResultSet rs = db.executeQuerySql(sql);
@@ -247,7 +254,7 @@ public class DBServer {
    private  void readPermissions()
    {
        DBAcessResult db=new DBAcessResult();
-       db.setDB(dbType);
+       db.setDB(BusDictionary.getInstance().defaultDB);
        String file=XMLRead.dir+"/dbbase.xml";
        XMLRead rd=new XMLRead(file);
        try
@@ -423,12 +430,12 @@ public RequestResult startThread(ClientModel model)
     DataResult configsql=null;
     HashMap<String,Object> map=null;//参数化结果
     String cacheid="";
+    if(model.configID!=null)
+    {
+        model.configID=model.configID.replace("/", "_");
+    }
     if(model.strSQL.isEmpty())
     {
-        if(model.configID!=null)
-        {
-            model.configID=model.configID.replace("/", "_");
-        }
         configsql = SQLConfig.getInstance().getResult(model.configID);
         strSQL=configsql.strSql;
     }
@@ -437,8 +444,20 @@ public RequestResult startThread(ClientModel model)
         strSQL=model.strSQL;
     }
     RequestResult reqResult=new RequestResult();
+    //取出module
+    String moduleID="";
+    if(model.dbType.isEmpty())
+    {
+      int index=model.configID.indexOf("_");
+      moduleID=model.configID.substring(0,index);
+    }
+    else
+    {
+        moduleID=model.dbType;//客户端设置
+    }
+    String curDB= BusDictionary.getInstance().getModulDB(moduleID);
     DBAcessResult db=new DBAcessResult();
-    db.setDB(dbType);
+    db.setDB(curDB);
     //分析SQL
     FilterResult result = FilterTable.getInstance().getTableType(strSQL);
     //处理Sql 

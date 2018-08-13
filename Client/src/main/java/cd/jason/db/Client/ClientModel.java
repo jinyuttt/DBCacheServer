@@ -42,6 +42,11 @@ public String configID="";//配置ID,能够找
 public String userName="";
 
 /**
+ * 数据库类型
+ */
+public String dbType="";
+
+/**
  * 数据转换，查询数据时转换数据
  * 字段名称中文文转换
  * 字典值转换
