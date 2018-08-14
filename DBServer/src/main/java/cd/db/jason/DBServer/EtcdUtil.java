@@ -10,6 +10,7 @@
 package cd.db.jason.DBServer;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import mousio.client.retry.RetryOnce;
 import mousio.etcd4j.EtcdClient;
@@ -38,7 +39,21 @@ public class EtcdUtil {
         }
             return client;
     }
-
+   public static void setAddress(String address)
+   {
+       String[] addrs=address.split(";");
+       URI[] urls=new URI[addrs.length];
+       for(int i=0;i<addrs.length;i++)
+       {
+           try {
+            urls[i]=new URI(addrs[i]);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+       }
+       client = new EtcdClient(urls);
+       
+   }
     /**
      * 根据指定的配置名称获取对应的value
      * @param key 配置项
