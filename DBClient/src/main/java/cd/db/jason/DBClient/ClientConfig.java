@@ -25,4 +25,9 @@ package cd.db.jason.DBClient;
 public class ClientConfig {
 public static String srvIP="127.0.0.1";
 public static int srvPort=9999;
+public static String netType="tcp";
+public static String Client_Cluster_Addr="";
+public static boolean  ischeckCluster=false;
+public static long checkTimeLen =60*60*1000;
+
 }

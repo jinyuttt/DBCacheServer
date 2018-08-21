@@ -1,0 +1,8 @@
+1.静态部署
+   提前知道部署的所有节点，将所有节点都写在配置文件中的initial-clusterx项，多个用逗号隔开（格式：节点名称=http://ip:port）
+2.etcd发现
+  屏蔽initial-cluster项。按照定义的发现URL格式天上discovery项，并且发现URL已经向另外的集群节点注册。
+  采用curl -X PUT http://192.168.3.107:2379/v2/keys/cluster_discovery/DBCacheServer/size -d value=3注册发现URL
+3.扩展集群
+  etcdctl member add infra3 http://192.168.3.108:2380
+  执行该命令，然后启动etcd

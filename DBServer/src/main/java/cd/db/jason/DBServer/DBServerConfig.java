@@ -31,17 +31,28 @@ import java.util.Properties;
  *     
  */
 public class DBServerConfig {
-public int port=6000;
+public static String ServerName="DBCacheSrv";
+public int port=6000;//端口
 public String logConfig="config/log4j2.xml";
 public String sqlConfig="SQLConfig";
 public String dbTypeConfig="config/dbType.properties";
-public String dbType="ora";
+public String dbType="ora";//默认主数据库配置文件
 private String confFile="config/config.properties";
-public  long cacheSize=10000;
-public int cacheTime=60;
+public  long cacheSize=10000;//内存缓存大小
+public int cacheTime=60;//内存缓存时间
 public HashMap<String,String> db=new HashMap<String,String>();
-public boolean isRedis=false;
-public String redisSrv="";
+public boolean isRedis=false;//redis扩展
+public String redisSrv="";//reids地址
+public boolean iscluster=false;//是否集群部署
+public String clusterAddress="";//集群地址
+public String localIP="";//本节点IP
+public int ttl=10;//心跳时间
+public String localNodeID="";//本节点唯一ID
+public String srvNetType="tcp";//通信类型
+public String getConfigFile()
+{
+    return confFile;
+}
 public void loadConfig()
 {
    File conf=new File(confFile);
@@ -65,6 +76,11 @@ public void loadConfig()
      String db=properties.getProperty("dbConfig", "config/dbType.properties");
      String redisUse=properties.getProperty("redisUse", "false");
      String redisAddr=properties.getProperty("redisSrv", "");
+     String isCluster=properties.getProperty("cluster_discovery", "false");
+     String ClusterAddr=properties.getProperty("cluster_discovery_address", "");
+     String ip=properties.getProperty("ip", "127.0.0.1");
+     String updatettl=properties.getProperty("ttl", "10");
+     String localID=properties.getProperty("localnodeid", "");
      this.sqlConfig=srvSqls;
      this.logConfig=logConf;
      this.dbType=srvDBType;
@@ -74,6 +90,15 @@ public void loadConfig()
      this.dbTypeConfig=db;
      this.redisSrv=redisAddr;
      this.isRedis=Boolean.valueOf(redisUse);
+     this.iscluster=Boolean.valueOf(isCluster);
+     this.clusterAddress=ClusterAddr;
+     this.localIP=ip;
+     this.ttl=Integer.valueOf(updatettl);
+     this.localNodeID=localID;
+     if(localID==null||localID.trim().isEmpty())
+     {
+         this.localNodeID=ip+":"+port;
+     }
     }
     catch(Exception ex)
     {

@@ -9,6 +9,7 @@ import java.net.URLDecoder;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.concurrent.locks.ReentrantLock;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +30,10 @@ public class PoolManager {
     public String applocaltion="";
     // 调用SQL      
     PreparedStatement pst = null;
+    //连接
     private ConcurrentHashMap<String, Connection> mapCon=new ConcurrentHashMap<String, Connection>();
+   
+    private ReentrantLock lock_obj=new ReentrantLock();
     private PoolManager()
     {
         URL url = PoolManager.class.getProtectionDomain().getCodeSource().getLocation();
@@ -37,7 +41,6 @@ public class PoolManager {
         {
             url=ClassLoader.getSystemClassLoader().getResource("");
         }
-        
         String filePath = null;  
         try {  
             filePath = URLDecoder.decode(url.getPath(), "utf-8");// 转化为utf-8编码  
@@ -57,7 +60,7 @@ public class PoolManager {
       * 初始化配置连接
      * @param name
      */
- private synchronized  HikariDataSource initConfig(String name)
+ private  HikariDataSource initConfig(String name)
  {
      System.out.println("读取DB配置路径："+applocaltion);
      StringBuffer buf=new StringBuffer();
@@ -68,34 +71,27 @@ public class PoolManager {
      File conf=new File(buf.toString());
      if(!conf.exists())
      {
-         System.out.println("没有文件："+conf.getAbsolutePath());
          //继续处理路径，防止插件路径
-         URL url =null;
-         url=ClassLoader.getSystemClassLoader().getResource("");
-         String path = null;  
-         try {  
-             path = URLDecoder.decode(url.getPath(), "utf-8");// 转化为utf-8编码  
-         } catch (Exception e) {  
-             e.printStackTrace();  
-         }  
-         if(applocaltion==path)
-         {
-             return null;
-         }
-         else
-         {
-             applocaltion=path;
-         }
-          return initConfig(name);
+         //构造函数已经采用加载器路径
+         System.out.println("没有文件："+conf.getAbsolutePath());
+         return null;
      }
      else
      {
          System.out.println("读取DB配置："+buf.toString());
      }
-     //替换了也没有关系;连接池最后都会销毁
-     HikariConfig config = new HikariConfig(buf.toString());
-     HikariDataSource dataSource= new HikariDataSource(config);
-     map.put(name, dataSource);
+     //多次线程发送替换也没有关系;连接池最后都会销毁
+     lock_obj.lock();//同步锁阻塞方法内
+     //判断一次
+     HikariDataSource dataSource=null;
+     dataSource=map.getOrDefault(name, null);//再次取出，没有才加入
+     if(dataSource==null)
+     {
+       HikariConfig config = new HikariConfig(buf.toString());
+       dataSource= new HikariDataSource(config);
+       map.put(name, dataSource);
+     }
+     lock_obj.unlock();
      return dataSource;
  }
 
@@ -153,12 +149,13 @@ public void closeCurDB()
  *  关闭所有连接
  */
 public void stop()  {
-   
+    lock_obj.lock();
     for(HikariDataSource v:map.values())
     {
         v.close();
     }
     map.clear();
+    lock_obj.unlock();
 }
 
 

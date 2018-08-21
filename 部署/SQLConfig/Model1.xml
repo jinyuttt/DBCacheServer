@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>  
-<Model>  
-<学生分数>
-<学生分数查询 id="01">select * from score</学生分数查询>
-<学生分数查询 id="02">select * from score where id='?'</学生分数查询>
-</学生分数>
-</Model>  

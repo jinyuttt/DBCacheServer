@@ -53,6 +53,18 @@ import cd.strommq.nettyFactory.FactorySocket;
  *     
  */
 public class DBServer {
+    private static class Sington
+    {
+        private static DBServer instance=new DBServer();
+    }
+    public static DBServer getInstance()
+    {
+        return Sington.instance;
+    }
+    private DBServer()
+    {
+        
+    }
    public String javaDir="javasrc";
    public String clsDir="clsSrc";
    ExecutorService fixedThreadPool = null;
@@ -821,7 +833,6 @@ private DynamicModel createModel(String filePath,String name,String src)
     Map<String, byte[]> results = compiler.compile(filePath+"/"+name+".java", src);
     Class<?> clazz = compiler.loadClass("cd.db.jason.model."+name, results);
     // try instance:
-    @SuppressWarnings("deprecation")
     DynamicModel model = (DynamicModel) clazz.newInstance();
     return model;
     }
@@ -841,7 +852,6 @@ private DynamicModel createModel(String filePath,String name,String src)
  * @return    
  * List<DynamicModel>
  */
-@SuppressWarnings("deprecation")
 private List<DynamicModel> queryModel(DynamicModel template,String clsName,ResultSet rs)
 {
      clsName=clsName.replace("-", "_");

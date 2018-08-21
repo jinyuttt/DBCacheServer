@@ -18,10 +18,10 @@ public class App
      
         DBServerConfig conf=new DBServerConfig();
         conf.loadConfig();
-        //
+        //日志配置
         LogFactory.appPath=System.getProperty("user.dir");
         LogFactory.confPath=conf.logConfig;
-        //
+        //缓存配置
         DBCache.getInstance().maxCacheSize=conf.cacheSize;
         DBCache.getInstance().maxCacheTime=conf.cacheTime;
         DBCache.getInstance().init();
@@ -32,26 +32,33 @@ public class App
             RedisClient.setRedidAddress(conf.redisSrv);
         }
         //
+        if(conf.iscluster)
+        {
+            String config=conf.sqlConfig+";"+conf.dbTypeConfig+";"+conf.logConfig+";"+"dbconfig";
+            //采用集群部署方案
+            ClusterServer.getInstance().setConfigUp(config);
+            ClusterServer.getInstance().setServerName(DBServerConfig.ServerName);
+            String localSrvAddr=conf.srvNetType+"://"+conf.localIP+":"+conf.port;
+            ClusterServer.getInstance().RegisterNode(conf.localNodeID, localSrvAddr, conf.clusterAddress, conf.ttl);
+            ReloadConfig.getInstance().start();
+        }
+        //数据库设置路径
         PoolManager.getInstance().applocaltion=LogFactory.appPath;
         //
         BusDictionary.getInstance().setDBType(conf.db);
         BusDictionary.getInstance().defaultDB=conf.dbType;
+        //
         XMLRead.dir=conf.sqlConfig;
         SQLConfig.getInstance().read();//读取SQL
         //
-        DBServer server=new DBServer();
-        server.start(conf.port);
+       // DBServer server=new DBServer();
+        DBServer.getInstance().start(conf.port);
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e1) {
         
             e1.printStackTrace();
         }
-//        ClientModel model=new ClientModel();
-//        model.strSQL="select * from student where id=?";
-//        model.addParam("id", 2);
-//        model.userName="1";
-//        server.startThread(model);
         try {
             System.in.read();
         } catch (IOException e) {

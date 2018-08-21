@@ -53,6 +53,13 @@ public class SQLConfig {
  {
      mapCache.put(name, model);
  }
+ 
+ /**
+  * 
+ * @Title: read
+ * @Description: 读取所有SQL文件
+ * @return void    返回类型
+  */
   public void read()
   {
       File dir=new File(XMLRead.dir);
@@ -61,15 +68,27 @@ public class SQLConfig {
           String[] sqlConfs=dir.list();
           for(String srvSql:sqlConfs)
           {
-              XMLRead read=new XMLRead(XMLRead.dir+"/"+srvSql);
-              HashMap<String, String> map = read.readALL();
-              for(Entry<String, String> item:map.entrySet())
-              {
-                  DataResult sqlConf=new DataResult();
-                  sqlConf.strSql=item.getValue();
-                  mapResult.put(item.getKey(), sqlConf);
-              }
+              readSQLFile(XMLRead.dir+"/"+srvSql);
           }
+      }
+  }
+  
+  /**
+   * 
+  * @Title: readSQLFile
+  * @Description: 读取单个SQL文件
+  * @param file    参数
+  * @return void    返回类型
+   */
+  public void readSQLFile(String file)
+  {
+      XMLRead read=new XMLRead(file);
+      HashMap<String, String> map = read.readALL();
+      for(Entry<String, String> item:map.entrySet())
+      {
+          DataResult sqlConf=new DataResult();
+          sqlConf.strSql=item.getValue();
+          mapResult.put(item.getKey(), sqlConf);
       }
   }
 }

@@ -42,7 +42,7 @@ public class RequestParam {
 public RequestResult  requestResult(ClientModel client)
 {
     RequestResult result=null;
-    NettyClient netClient = FactorySocket.createClient("tcp");
+    NettyClient netClient = FactorySocket.createClient(ClientConfig.netType);
     boolean r=netClient.connect(ClientConfig.srvIP, ClientConfig.srvPort);
     if(r)
     {

@@ -31,13 +31,17 @@ import org.redisson.config.Config;
  */
 public class RedisClient {
    
-   public static boolean isUse=false;
+    public static boolean isUse=false;
     private static Config config = new Config();
     private static RedissonClient redisson = null;
     private static final String RAtomicName = "genId_";  
   public static void setRedidAddress(String address)
   {
       //
+      if(redisson!=null)
+      {
+          redisson.shutdown();
+      }
       String[]addrs=address.split(";");
       ClusterServersConfig srvConfig=null;
       try {
